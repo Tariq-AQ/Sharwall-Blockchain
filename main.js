@@ -36,10 +36,31 @@ class Blockchain {
     newBlock.hash = newBlock.calculateHash();
     this.chain.push(newBlock);
   }
+
+  //Verifying block additions
+  isChainValid() {
+    for (let i = 1; i < this.chain.length; i++) {
+      const currentBlock = this.chain[i];
+      const previousBlock = this.chain[i - 1];
+
+      if (currentBlock.hash !== currentBlock.calculateHash()) {
+        return false;
+      }
+
+      if (currentBlock.previousHash !== previousBlock.hash) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 let SharwallCoin = new Blockchain();
 SharwallCoin.addBlock(new Block(1, "04/04/2021", { amount: 4 }));
 SharwallCoin.addBlock(new Block(2, "05/04/2021", { amount: 8 }));
+console.log("Is blockchain valid? " + SharwallCoin.isChainValid());
 
-console.log(JSON.stringify(SharwallCoin, null, 4));
+SharwallCoin.chain[1].data = { amount: 100 };
+
+console.log("Is blockchain valid? " + SharwallCoin.isChainValid());
+//console.log(JSON.stringify(SharwallCoin, null, 4));
