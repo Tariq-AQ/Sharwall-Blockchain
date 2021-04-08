@@ -1,5 +1,13 @@
 const SHA256 = require("crypto-js/sha256");
 
+class Transaction {
+  constructor(fromAddress, toAddress, amount) {
+    this.fromAddress = fromAddress;
+    this.toAddress = toAddress;
+    this.amount = amount;
+  }
+}
+
 class Block {
   constructor(timestamp, transactions, previousHash = "") {
     this.timestamp = timestamp;
@@ -34,6 +42,8 @@ class Blockchain {
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.difficulty = 2;
+    this.pendingTransactions = [];
+    this.miningReward = 100;
   }
   createGenesisBlock() {
     return new Block("04/04/2021", "SharwallLape", " ");
@@ -43,10 +53,33 @@ class Blockchain {
     return this.chain[this.chain.length - 1];
   }
 
-  addBlock(newBlock) {
-    newBlock.previousHash = this.getLatestBlock().hash;
-    newBlock.mineBlock(this.difficulty);
-    this.chain.push(newBlock);
+  minePendingTransactions(miningRewardAddress) {
+    let block = new Block(Date.now(), this.pendingTransactions);
+    block.mineBlock(this.difficulty);
+    this.chain.push(block);
+    console.log("Block succesfully mined!");
+    this.pendingTransactions = [
+      new Transaction(null, miningRewardAddress, this.miningReward),
+    ];
+  }
+
+  createTransaction(transaction) {
+    this.pendingTransactions.push(transaction);
+  }
+
+  getBalanceOfAddress(address) {
+    let balance = 0;
+    for (const block of this.chain) {
+      for (const trans of block.transactions) {
+        if (trans.fromAddress === address) {
+          balance -= trans.amount;
+        }
+        if (trans.toAddress === address) {
+          balance += trans.amount;
+        }
+      }
+    }
+    return balance;
   }
 
   //Verifying block additions
@@ -68,3 +101,19 @@ class Blockchain {
 }
 
 let SharwallCoin = new Blockchain();
+SharwallCoin.createTransaction(new Transaction("address1", "address2", 100));
+SharwallCoin.createTransaction(new Transaction("address2", "address1", 50));
+console.log("\n Starting the miner..");
+SharwallCoin.minePendingTransactions("sharwallAddress");
+console.log(
+  "\n Balalnce of sharwall is ",
+  SharwallCoin.getBalanceOfAddress("sharwallAddress")
+);
+
+console.log("\n Starting the miner again..");
+SharwallCoin.minePendingTransactions("sharwallAddress");
+
+console.log(
+  "\n Balalnce of sharwall is ",
+  SharwallCoin.getBalanceOfAddress("sharwallAddress")
+);
